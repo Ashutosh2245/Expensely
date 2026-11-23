@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/.git
+**/.github
+**/*.log
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/tests
+README.md
+DEPLOYMENT.md

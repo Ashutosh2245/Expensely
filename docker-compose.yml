@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: expensely-mongodb
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - expensely-network
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: expensely-backend
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/expensely
+      - JWT_ACCESS_SECRET=expensely_local_docker_access_secret_key_2026
+      - JWT_REFRESH_SECRET=expensely_local_docker_refresh_secret_key_2026
+      - CLIENT_URL=http://localhost:5173
+      - FRONTEND_URL=http://localhost:5173
+      - BACKEND_URL=http://localhost:5000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - expensely-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:5000/api
+        - VITE_SOCKET_URL=http://localhost:5000
+    container_name: expensely-frontend
+    restart: unless-stopped
+    ports:
+      - '5173:80'
+    depends_on:
+      - backend
+    networks:
+      - expensely-network
+
+networks:
+  expensely-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
