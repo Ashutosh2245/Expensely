@@ -34,7 +34,9 @@ import {
   Loader2,
   Copy,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  LogOut,
+  UserMinus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -164,16 +166,97 @@ export const GroupDetailsPage: React.FC = () => {
 
     try {
       setInviteLoading(true);
-      const { data } = await groupApi.invite(id, inviteIdentifier.trim());
-      if (data.success) {
-        toast.success(data.message || 'Invitation sent successfully!');
-        setIsInviteOpen(false);
-        setInviteIdentifier('');
+      // If user is OWNER or ADMIN, attempt direct add first
+      if (currentUserRole === 'OWNER' || currentUserRole === 'ADMIN') {
+        try {
+          const { data } = await groupApi.addMember(id, inviteIdentifier.trim());
+          if (data.success) {
+            toast.success(data.message || 'Member added to group!');
+            setIsInviteOpen(false);
+            setInviteIdentifier('');
+            loadGroupData();
+            return;
+          }
+        } catch (addErr: any) {
+          // If direct add failed because user was not found by username, try sending email invite if it looks like an email
+          if (addErr.response?.status === 404 && inviteIdentifier.includes('@')) {
+            const { data } = await groupApi.invite(id, inviteIdentifier.trim());
+            if (data.success) {
+              toast.success(data.message || 'Invitation sent successfully!');
+              setIsInviteOpen(false);
+              setInviteIdentifier('');
+              return;
+            }
+          } else {
+            throw addErr;
+          }
+        }
+      } else {
+        const { data } = await groupApi.invite(id, inviteIdentifier.trim());
+        if (data.success) {
+          toast.success(data.message || 'Invitation sent successfully!');
+          setIsInviteOpen(false);
+          setInviteIdentifier('');
+        }
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to send invite');
+      toast.error(err.response?.data?.message || 'Failed to add/invite member');
     } finally {
       setInviteLoading(false);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!id || !user || !group) return;
+
+    // Check balance
+    const myBal = balances?.balances?.find((b) => b.userId === user._id);
+    if (myBal && Math.abs(myBal.netBalance) > 0) {
+      toast.error(
+        `Cannot leave group with unsettled balance (₹${Math.abs(myBal.netBalance).toFixed(2)}). Please settle up all dues first.`
+      );
+      return;
+    }
+
+    const confirmMsg =
+      currentUserRole === 'OWNER' && group.members.length > 1
+        ? 'As the owner, leaving will transfer ownership to another member. Are you sure you want to leave?'
+        : 'Are you sure you want to leave this group?';
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const { data } = await groupApi.leaveGroup(id, user._id);
+      if (data.success) {
+        toast.success(data.message || 'You have left the group.');
+        navigate('/groups');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to leave group');
+    }
+  };
+
+  const handleRemoveMember = async (memberUserId: string, memberName: string) => {
+    if (!id || !memberUserId) return;
+
+    const memBal = balances?.balances?.find((b) => b.userId === memberUserId);
+    if (memBal && Math.abs(memBal.netBalance) > 0) {
+      toast.error(
+        `${memberName} has an unsettled balance of ₹${Math.abs(memBal.netBalance).toFixed(2)}. Settle all dues before removing.`
+      );
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to remove ${memberName} from this group?`)) return;
+
+    try {
+      const { data } = await groupApi.removeMember(id, memberUserId);
+      if (data.success) {
+        toast.success(data.message || `${memberName} removed from group.`);
+        loadGroupData();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to remove member');
     }
   };
 
@@ -300,6 +383,15 @@ export const GroupDetailsPage: React.FC = () => {
               <PlusCircle className="w-4 h-4" />
               <span>Add Expense</span>
             </Link>
+
+            <button
+              onClick={handleLeaveGroup}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-coral-400 bg-coral-500/10 border border-coral-500/20 hover:bg-coral-500/20 transition ml-auto"
+              title="Leave this group"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Leave</span>
+            </button>
           </div>
         </div>
 
@@ -658,9 +750,37 @@ export const GroupDetailsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/5 text-slate-300">
-                  {m.role}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/5 text-slate-300">
+                    {m.role}
+                  </span>
+
+                  {/* Remove button for owner/admin on other non-owner members */}
+                  {(currentUserRole === 'OWNER' || currentUserRole === 'ADMIN') &&
+                    m.user?._id !== user?._id &&
+                    m.role !== 'OWNER' && (
+                      <button
+                        onClick={() => handleRemoveMember(m.user?._id || m.user?.id, m.user?.fullName)}
+                        className="px-2 py-1 rounded-lg text-[11px] font-semibold text-coral-400 hover:text-coral-300 bg-coral-500/10 hover:bg-coral-500/20 border border-coral-500/20 transition flex items-center gap-1"
+                        title={`Remove ${m.user?.fullName}`}
+                      >
+                        <UserMinus className="w-3 h-3" />
+                        <span>Remove</span>
+                      </button>
+                    )}
+
+                  {/* Leave button for current user */}
+                  {m.user?._id === user?._id && (
+                    <button
+                      onClick={handleLeaveGroup}
+                      className="px-2 py-1 rounded-lg text-[11px] font-semibold text-coral-400 hover:text-coral-300 bg-coral-500/10 hover:bg-coral-500/20 border border-coral-500/20 transition flex items-center gap-1"
+                      title="Leave this group"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span>Leave</span>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -696,15 +816,17 @@ export const GroupDetailsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Invite Member */}
+      {/* Modal: Invite / Add Member */}
       <Modal
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        title="Invite Member to Group"
+        title={currentUserRole === 'OWNER' || currentUserRole === 'ADMIN' ? 'Add or Invite Member' : 'Invite Member to Group'}
       >
         <form onSubmit={handleSendInvite} className="space-y-4">
           <p className="text-xs text-slate-300 leading-relaxed">
-            Invite an existing EXPENSELY user by entering their unique username or email address.
+            {currentUserRole === 'OWNER' || currentUserRole === 'ADMIN'
+              ? 'Enter a registered username or email to instantly add them to the group, or share the invite link below.'
+              : 'Invite an existing EXPENSELY user by entering their unique username or email address.'}
           </p>
 
           <div>
@@ -748,7 +870,13 @@ export const GroupDetailsPage: React.FC = () => {
               disabled={inviteLoading}
               className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-brand-purple to-brand-indigo hover:opacity-95 shadow-glow disabled:opacity-50"
             >
-              {inviteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Invite'}
+              {inviteLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : currentUserRole === 'OWNER' || currentUserRole === 'ADMIN' ? (
+                'Add to Group'
+              ) : (
+                'Send Invite'
+              )}
             </button>
           </div>
         </form>

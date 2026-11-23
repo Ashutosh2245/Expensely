@@ -300,6 +300,69 @@ export async function joinByInviteCode(req, res) {
   }
 }
 
+export async function addMember(req, res) {
+  try {
+    const group = req.group;
+    const { identifier } = req.body;
+
+    if (!identifier) {
+      return res.status(400).json({ success: false, message: 'Username or email is required' });
+    }
+
+    // Only OWNER or ADMIN can directly add members
+    if (req.membership.role === 'MEMBER') {
+      return res.status(403).json({ success: false, message: 'Only group owners or admins can directly add members' });
+    }
+
+    const cleanId = identifier.trim().toLowerCase();
+    const userToAdd = await User.findOne({
+      $or: [{ username: cleanId }, { email: cleanId }]
+    });
+
+    if (!userToAdd) {
+      return res.status(404).json({ success: false, message: 'No registered user found with this username or email' });
+    }
+
+    // Check if user is already a member
+    if (group.members.some((m) => m.user.toString() === userToAdd._id.toString())) {
+      return res.status(400).json({ success: false, message: 'User is already a member of this group' });
+    }
+
+    group.members.push({
+      user: userToAdd._id,
+      role: 'MEMBER',
+      joinedAt: new Date()
+    });
+
+    await group.save();
+
+    await ActivityLog.create({
+      groupId: group._id,
+      userId: req.user._id,
+      action: 'MEMBER_JOINED',
+      description: `${req.user.fullName} added ${userToAdd.fullName} to the group.`
+    });
+
+    emitToGroup(group._id, 'member:joined', {
+      user: userToAdd.toSafeObject(),
+      role: 'MEMBER'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `${userToAdd.fullName} added to the group!`,
+      member: {
+        user: userToAdd.toSafeObject(),
+        role: 'MEMBER',
+        joinedAt: new Date()
+      }
+    });
+  } catch (err) {
+    console.error('[addMember] Error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to add member' });
+  }
+}
+
 export async function removeMember(req, res) {
   try {
     const group = req.group;
@@ -311,14 +374,14 @@ export async function removeMember(req, res) {
       return res.status(403).json({ success: false, message: 'Only group admins or owners can remove members' });
     }
 
-    // Owner cannot leave without transferring ownership
     const targetMember = group.members.find((m) => m.user.toString() === memberUserId);
     if (!targetMember) {
       return res.status(404).json({ success: false, message: 'Member not found in group' });
     }
 
-    if (targetMember.role === 'OWNER') {
-      return res.status(400).json({ success: false, message: 'Group owner cannot be removed. Transfer ownership first.' });
+    // Only owner can remove someone else, no one can remove the owner except owner leaving themselves
+    if (!isSelfLeaving && targetMember.role === 'OWNER') {
+      return res.status(400).json({ success: false, message: 'Group owner cannot be removed.' });
     }
 
     // Check if user has unsettled balances
@@ -327,8 +390,21 @@ export async function removeMember(req, res) {
     if (memberBal && Math.abs(memberBal.netBalancePaise) > 0) {
       return res.status(400).json({
         success: false,
-        message: `Member cannot leave or be removed with unsettled balance (₹${Math.abs(memberBal.netBalance).toFixed(2)})`
+        message: `Cannot ${isSelfLeaving ? 'leave' : 'remove member'} with an unsettled balance of ₹${Math.abs(memberBal.netBalance).toFixed(2)}. Please settle all dues first.`
       });
+    }
+
+    // If owner is leaving themselves
+    if (isSelfLeaving && targetMember.role === 'OWNER') {
+      if (group.members.length === 1) {
+        await Group.findByIdAndDelete(group._id);
+        return res.json({ success: true, message: 'You left and the group was closed.' });
+      }
+      // Reassign ownership to next member
+      const nextOwner = group.members.find((m) => m.user.toString() !== memberUserId);
+      if (nextOwner) {
+        nextOwner.role = 'OWNER';
+      }
     }
 
     group.members = group.members.filter((m) => m.user.toString() !== memberUserId);
@@ -347,8 +423,9 @@ export async function removeMember(req, res) {
 
     emitToGroup(group._id, 'member:removed', { userId: memberUserId });
 
-    return res.json({ success: true, message: isSelfLeaving ? 'You left the group' : 'Member removed' });
+    return res.json({ success: true, message: isSelfLeaving ? 'You successfully left the group' : 'Member removed successfully' });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Failed to remove member' });
+    console.error('[removeMember] Error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to process member removal' });
   }
 }

@@ -7,7 +7,8 @@ import {
   deleteGroup,
   inviteMember,
   joinByInviteCode,
-  removeMember
+  removeMember,
+  addMember
 } from '../controllers/groupController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireGroupMember, requireGroupAdmin, requireGroupOwner } from '../middleware/groupAuth.js';
@@ -23,6 +24,7 @@ router.patch('/:id', requireGroupAdmin, updateGroup);
 router.delete('/:id', requireGroupOwner, deleteGroup);
 router.post('/:id/invite', requireGroupMember, inviteMember);
 router.post('/join/:inviteCode', joinByInviteCode);
+router.post('/:id/members', requireGroupAdmin, addMember);
 router.delete('/:id/members/:memberId', requireGroupMember, removeMember);
 
 export default router;

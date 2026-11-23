@@ -129,9 +129,11 @@ export const groupApi = {
   create: (data: any) => api.post('/groups', data),
   update: (id: string, data: any) => api.patch(`/groups/${id}`, data),
   delete: (id: string) => api.delete(`/groups/${id}`),
+  addMember: (id: string, identifier: string) => api.post(`/groups/${id}/members`, { identifier }),
   invite: (id: string, identifier: string) => api.post(`/groups/${id}/invite`, { identifier }),
   joinByCode: (code: string) => api.post(`/groups/join/${code}`),
-  removeMember: (groupId: string, memberId: string) => api.delete(`/groups/${groupId}/members/${memberId}`)
+  removeMember: (groupId: string, memberId: string) => api.delete(`/groups/${groupId}/members/${memberId}`),
+  leaveGroup: (groupId: string, memberId: string) => api.delete(`/groups/${groupId}/members/${memberId}`)
 };
 
 export const invitationApi = {
