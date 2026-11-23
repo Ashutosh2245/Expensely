@@ -1,0 +1,61 @@
+name: Docker CI - Container Build Validation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/Dockerfile'
+      - 'backend/.dockerignore'
+      - 'frontend/Dockerfile'
+      - 'frontend/nginx.conf'
+      - 'frontend/.dockerignore'
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/docker-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/Dockerfile'
+      - 'backend/.dockerignore'
+      - 'frontend/Dockerfile'
+      - 'frontend/nginx.conf'
+      - 'frontend/.dockerignore'
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/docker-ci.yml'
+
+jobs:
+  docker-validation:
+    name: Docker & Docker Compose Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Backend Docker Build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: expensely-backend:ci
+
+      - name: Validate Frontend Docker Build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: expensely-frontend:ci
+          build-args: |
+            VITE_API_URL=http://localhost:5000/api
+            VITE_SOCKET_URL=http://localhost:5000
+
+      - name: Validate Docker Compose Configuration
+        run: |
+          docker compose config --quiet
+          docker compose -f docker-compose.prod.yml config --quiet
