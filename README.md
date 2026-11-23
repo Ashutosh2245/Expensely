@@ -1,14 +1,21 @@
 # EXPENSELY – Smart Expense Splitting & Collaborative Management Platform
 
 > **"Split Smart. Live Better."**
-
-EXPENSELY is a modern, production-grade financial SaaS application inspired by Splitwise, built with a dark navy & emerald fintech design, integer-paise financial precision, real-time WebSocket synchronization, and an optimal Min-Cash-Flow debt simplification engine.
+> 
+> Production-grade, zero-EC2 cloud financial SaaS platform inspired by Splitwise. Engineered with a dark navy & emerald fintech aesthetic, integer-paise financial precision, real-time WebSocket synchronization, and an optimal Min-Cash-Flow debt simplification engine.
 
 ---
 
 ## 🌟 Key Highlights & Engineering Features
 
-- **Integer Paise Financial Precision**: Zero floating-point rounding discrepancies. All calculations internally operate strictly on integer paise, guaranteeing that the group balance invariant `∑(netBalances) = 0` is strictly maintained.
+- **Zero Self-Managed VPS / EC2**: Purpose-built for modern managed cloud deployment:
+  - **Frontend**: Vercel (React 18 + Vite + TypeScript SPA with edge CDN & SPA rewrites).
+  - **Backend**: Render (Node.js Express + Socket.io persistent Web Service with `/api/health` probes).
+  - **Database**: MongoDB Atlas (Cloud replica set with Mongoose connection pooling).
+  - **Media Storage**: Cloudinary (Direct-to-cloud streams for avatars and expense receipts).
+  - **CI/CD**: GitHub Actions (Automated Node 22 test suite and Docker multi-stage build verification).
+- **Docker & Docker Compose**: Full containerization for backend (Node 22-alpine multi-stage with non-root security), frontend (Nginx alpine with SPA routing and gzip), and persistent MongoDB 7.0 services.
+- **Integer Paise Financial Precision**: Zero floating-point rounding discrepancies. All financial amounts internally operate strictly on integer paise, guaranteeing that group balance invariant `∑(netBalances) = 0` is strictly maintained.
 - **Min-Cash-Flow Debt Simplification**: Proprietary greedy settlement algorithm that transforms multi-member, multi-expense debts into the absolute minimum number of peer-to-peer settlement transactions.
 - **Dual Authentication**:
   - **Google OAuth 2.0**: Native Google Identity Services with verified token exchange and auto-provisioning.
@@ -27,46 +34,40 @@ EXPENSELY is a modern, production-grade financial SaaS application inspired by S
 
 ## 🏗️ Technology Stack
 
-### Frontend
-- **Framework**: React 18 + Vite (TypeScript)
-- **Styling**: Tailwind CSS (Custom Dark Navy, Emerald, Coral, and Violet theme)
-- **Animations**: Framer Motion & CSS micro-interactions
-- **Icons**: Lucide React
-- **Data Visualization**: Recharts (Area, Donut, Bar charts)
-- **Routing**: React Router DOM v6
-- **Networking**: Axios with automatic JWT refresh queue interceptor
-- **Real-Time**: Socket.io Client
-- **Document Generation**: jsPDF + jspdf-autotable
-- **Notifications**: React Hot Toast
-
-### Backend
-- **Runtime**: Node.js (v22+)
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose (with embedded MongoMemoryServer fallback)
-- **Real-Time Gateway**: Socket.io Server (Room-based authorization)
-- **Authentication**: JWT (Access Token 15m + Refresh Token rotation 7d)
-- **Security**: bcryptjs password hashing, rate limiting, CORS with credentials
-- **Email Service**: Nodemailer (with Ethereal test mailer fallback)
-- **File Uploads**: Multer with local disk storage and Cloudinary integration
+| Layer | Technologies & Tools |
+| :--- | :--- |
+| **Frontend** | React 18, Vite 5, TypeScript 5, Tailwind CSS, Framer Motion, Lucide React, Recharts, Axios, Socket.io Client, jsPDF |
+| **Backend** | Node.js 22, Express.js 4, Socket.io 4, Helmet 8, CORS, Express Rate Limit, Zod, Nodemailer, Multer |
+| **Database** | MongoDB Atlas / MongoDB 7.0, Mongoose 8 (Connection pooling: `min: 2`, `max: 10`) |
+| **Cloud Storage** | Cloudinary (Avatars & Receipts with direct buffer upload) |
+| **Cloud Platforms** | Vercel (Frontend SPA), Render (Backend Web Service) |
+| **Containerization** | Docker, Docker Compose, Nginx Alpine, Multi-Stage Builds |
+| **CI/CD** | GitHub Actions (`ci.yml`, `docker-ci.yml`) |
 
 ---
 
 ## 📁 Project Structure
 
-```
-expense-splitter/
+```text
+Expensely/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                     # Node 22 test runner & Vite build verification
+│       └── docker-ci.yml              # Docker Buildx multi-stage build check
+│
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # StatCard, Modal, Navbar, Sidebar, LoadingSkeleton, EmptyState
-│   │   ├── context/         # AuthContext, NotificationContext
-│   │   ├── layouts/         # AppLayout
-│   │   ├── pages/           # 17 Pages (Landing, Dashboard, Groups, AddExpense, SettleUp, etc.)
-│   │   ├── services/        # api.ts (Axios + Refresh Interceptor), socket.ts
-│   │   ├── types/           # Complete TypeScript interfaces
-│   │   ├── index.css        # Tailwind directives, custom glassmorphism, scrollbars
-│   │   ├── App.tsx          # Client route definitions
-│   │   └── main.tsx         # React root
-│   ├── index.html
+│   │   ├── components/                # StatCard, Modal, Navbar, Sidebar, LoadingSkeleton, EmptyState
+│   │   ├── context/                   # AuthContext, NotificationContext
+│   │   ├── layouts/                   # AppLayout
+│   │   ├── pages/                     # 17 Pages (Landing, Dashboard, Groups, AddExpense, SettleUp, etc.)
+│   │   ├── services/                  # api.ts (Axios + Refresh Interceptor), socket.ts
+│   │   ├── types/                     # Complete TypeScript interfaces
+│   │   ├── App.tsx                    # Client route definitions
+│   │   └── main.tsx                   # React root
+│   ├── Dockerfile                     # Multi-stage build (Node builder -> Nginx runner)
+│   ├── nginx.conf                     # Nginx SPA rewrite & gzip compression
+│   ├── vercel.json                    # Vercel SPA rewrite configuration
 │   ├── package.json
 │   ├── tailwind.config.js
 │   ├── tsconfig.json
@@ -74,96 +75,120 @@ expense-splitter/
 │
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # db.js (MongoDB + Memory Server), env.js
-│   │   ├── controllers/     # auth, user, group, expense, balance, settlement, analytics, etc.
-│   │   ├── middleware/      # auth.js (JWT), groupAuth.js (Role-based access)
-│   │   ├── models/          # User, Group, Expense, Settlement, Notification, Activity, etc.
-│   │   ├── routes/          # Express REST routers
-│   │   ├── services/        # balanceService.js (Min-Cash-Flow Debt Simplification)
-│   │   ├── sockets/         # socketHandler.js (Authenticated room broadcasting)
-│   │   ├── utils/           # splitEngine.js, password.js, jwt.js, mailer.js, seed.js
-│   │   ├── app.js           # Express app instance & static frontend serving
-│   │   └── server.js        # HTTP server & WebSocket bootstrap
+│   │   ├── config/                    # db.js (Atlas + pooling), env.js
+│   │   ├── controllers/               # 11 Controllers (auth, user, group, expense, settlement, etc.)
+│   │   ├── middleware/                # auth.js (JWT), groupAuth.js (Role-based access)
+│   │   ├── models/                    # 9 Models (User, Group, Expense, Settlement, RefreshToken, etc.)
+│   │   ├── routes/                    # 12 Express REST routers & health check
+│   │   ├── services/                  # balanceService.js (Min-Cash-Flow Debt Simplification)
+│   │   ├── sockets/                   # socketHandler.js (Authenticated room broadcasting)
+│   │   ├── utils/                     # splitEngine.js, password.js, jwt.js, mailer.js, seed.js
+│   │   ├── app.js                     # Express app instance, Helmet, CORS, logging, rate-limits
+│   │   └── server.js                  # 0.0.0.0 binding, graceful shutdown, health check
 │   ├── tests/
 │   │   └── multiUserWorkflow.test.js  # 15 end-to-end integration test scenarios
-│   ├── package.json
-│   └── .env.example
+│   ├── Dockerfile                     # Multi-stage Node 22-alpine container
+│   ├── render.yaml                    # Render Blueprint configuration
+│   └── package.json
 │
-├── package.json             # Monorepo root script runner
-├── README.md                # Comprehensive documentation
-├── .gitignore
-└── .env.example
+├── docker-compose.yml                 # Local multi-container Docker Compose
+├── docker-compose.prod.yml            # Production container configuration
+├── .env.docker.example                # Docker environment configuration template
+├── DEPLOYMENT.md                      # Comprehensive cloud deployment guide (Vercel, Render, Atlas)
+├── package.json                       # Monorepo root scripts
+└── README.md
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🐳 Docker & Docker Compose Workflow
 
-### 1. Prerequisites
-- **Node.js**: v18.0.0 or higher (v22.x recommended)
-- **npm** or **pnpm**
-- *(Optional)* Local MongoDB or MongoDB Atlas URI (If not running, the application starts an embedded in-memory MongoDB automatically!)
+Expensely is fully containerized. You can run the entire full-stack ecosystem locally with a single command.
 
-### 2. Installation
-From the root directory or inside `backend` and `frontend`:
+### 1. Quick Start with Docker Compose
 ```bash
-# Install backend dependencies
-cd backend
-npm install
+# Clone the repository
+git clone https://github.com/Ashutosh2245/Expensely.git
+cd Expensely
 
-# Install frontend dependencies
-cd ../frontend
-npm install
+# Setup Docker environment file
+cp .env.docker.example .env.docker
+
+# Build and start all containers in detached mode
+docker compose up --build -d
 ```
 
-### 3. Seed Database with Realistic Demo Data
-Populate demo users, collaborative groups, expenses, and settlements:
+### 2. Verify Running Containers
 ```bash
-cd backend
-npm run seed
+docker compose ps
 ```
-Demo accounts created:
-| Full Name | Username | Email | Password | Role in Goa Trip |
-| :--- | :--- | :--- | :--- | :--- |
-| **Ashutosh Kumar** | `ashutosh` | `ashutosh@expensely.app` | `password123` | Owner |
-| **Rahul Sharma** | `rahul` | `rahul@expensely.app` | `password123` | Admin |
-| **Aman Verma** | `aman` | `aman@expensely.app` | `password123` | Member |
-| **Priya Singh** | `priya` | `priya@expensely.app` | `password123` | Member |
+Expected output:
+| Name | Image | Status | Ports |
+| :--- | :--- | :--- | :--- |
+| `expensely-mongodb` | `mongo:7.0` | Up (healthy) | `0.0.0.0:27017->27017/tcp` |
+| `expensely-backend` | `expensely-backend` | Up (healthy) | `0.0.0.0:5000->5000/tcp` |
+| `expensely-frontend` | `expensely-frontend`| Up | `0.0.0.0:5173->80/tcp` |
 
-*(You can also use the 1-Click Quick Demo Login buttons on the Sign-In screen!)*
+Access the applications:
+- **Frontend SPA**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:5000](http://localhost:5000)
+- **Health Probe**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
-### 4. Running the Application
-
-#### Option A: Unified Production Mode (Backend serves Frontend)
+### 3. Essential Docker CLI Commands
 ```bash
-# 1. Build frontend
-cd frontend
-npm run build
+# View real-time logs for all services
+docker compose logs -f
 
-# 2. Start server
-cd ../backend
-npm start
+# View backend logs only
+docker compose logs -f backend
+
+# Seed the database with demo users and groups inside the container
+docker compose exec backend npm run seed
+
+# Run the backend test suite inside the container
+docker compose exec backend npm test
+
+# Restart services
+docker compose restart
+
+# Stop all containers
+docker compose stop
+
+# Stop and remove containers, networks, and keep persistent database volumes
+docker compose down
+
+# Stop and wipe everything including database volumes
+docker compose down -v
 ```
-Open **`http://localhost:5000`** in your browser.
 
-#### Option B: Development Mode (Vite HMR + Backend Watcher)
-- Terminal 1 (Backend):
-  ```bash
-  cd backend
-  npm run dev
-  ```
-- Terminal 2 (Frontend):
-  ```bash
-  cd frontend
-  npm run dev
-  ```
-Open **`http://localhost:5173`** in your browser.
+---
+
+## ☁️ Production Cloud Deployment
+
+Expensely is configured for direct zero-downtime deployment on managed cloud platforms without self-managed virtual machines:
+
+- **Frontend**: [Vercel](https://vercel.com/)
+  - Root directory: `frontend`
+  - Build command: `npm run build`
+  - Output directory: `dist`
+  - SPA Rewrites: Configured via `frontend/vercel.json`
+- **Backend**: [Render](https://render.com/)
+  - Persistent Web Service: `expensely-api`
+  - Root directory: `backend`
+  - Blueprint: `backend/render.yaml`
+  - Health check path: `/api/health`
+- **Database**: [MongoDB Atlas](https://cloud.mongodb.com/)
+  - Mongoose connection pooling with automated reconnection
+- **Media Storage**: [Cloudinary](https://cloudinary.com/)
+  - Direct cloud upload stream with public ID tracking
+
+👉 **For the complete step-by-step cloud deployment walkthrough, environment variable tables, and smoke testing procedures, read [DEPLOYMENT.md](file:///C:/Users/Ashutosh%20Kumar/.gemini/antigravity/scratch/expense-splitter/DEPLOYMENT.md).**
 
 ---
 
 ## 🧪 Automated Testing
 
-EXPENSELY includes a comprehensive integration test suite verifying the mandatory multi-user collaborative scenario:
+EXPENSELY includes a comprehensive test suite covering the entire multi-user collaborative scenario:
 1. Register Ashutosh, Rahul, and Aman.
 2. Ashutosh logs in and creates "Goa Trip 2026".
 3. Ashutosh invites Rahul and Aman.
@@ -179,174 +204,36 @@ EXPENSELY includes a comprehensive integration test suite verifying the mandator
 13. Duplicate email rejection test.
 14. Unauthorized group access rejection (403 Forbidden).
 15. Invalid split sum validation test.
-16. Google authentication user linking.
 
-To run tests:
+To execute tests:
 ```bash
+# In backend directory
 cd backend
 npm test
+
+# Or via Docker
+docker compose exec backend npm test
 ```
 
 ---
 
-## 🔑 Environment Variables Reference
+## 📡 Health Check & System Monitoring
 
-Create a `.env` file in `backend/` (or copy from `.env.example`):
+The backend exposes an unauthenticated health endpoint for cloud orchestrators (Render, Kubernetes, Docker):
 
-```ini
-# Server Port
-PORT=5000
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
+`GET /api/health`
 
-# Database Connection (Leave default to use automatic embedded in-memory MongoDB)
-MONGODB_URI=mongodb://127.0.0.1:27017/expensely
-
-# JWT Authentication
-JWT_ACCESS_SECRET=your_jwt_access_secret_key_here
-JWT_REFRESH_SECRET=your_jwt_refresh_secret_key_here
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-
-# Google OAuth 2.0 (Optional)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
-
-# Cloudinary (Optional for cloud media uploads)
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-# SMTP Email Configuration (Optional - falls back to test logger/Ethereal)
-SMTP_HOST=smtp.ethereal.email
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-EMAIL_FROM=EXPENSELY <no-reply@expensely.app>
+Response:
+```json
+{
+  "status": "ok",
+  "service": "expensely-api",
+  "database": "connected",
+  "timestamp": "2026-11-23T18:15:30.123Z"
+}
 ```
 
 ---
 
-## 📡 REST API Documentation
-
-### Authentication (`/api/auth`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/register` | Register new user with full name, unique username, email & password | No |
-| `POST` | `/login` | Login with username/email and password | No |
-| `POST` | `/google` | Google OAuth token verification and account linking | No |
-| `GET` | `/check-username/:username` | Real-time username availability check | No |
-| `POST` | `/refresh` | Rotate refresh token and issue new access token | No |
-| `POST` | `/logout` | Invalidate refresh token session | No |
-| `GET` | `/me` | Get currently authenticated user profile | Yes (Bearer) |
-| `POST` | `/forgot-password` | Generate reset token and email instructions | No |
-| `POST` | `/reset-password` | Update password using valid reset token | No |
-
-### Groups (`/api/groups`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/` | Create new group (User is set as OWNER) | Yes |
-| `GET` | `/` | Get all groups user is member of with personal net balance | Yes |
-| `GET` | `/:id` | Get group details, members, and real-time balances | Yes (Member) |
-| `PATCH` | `/:id` | Update group name, description, avatar, category | Yes (Admin/Owner) |
-| `DELETE` | `/:id` | Delete group and associated expenses | Yes (Owner) |
-| `POST` | `/:id/invite` | Invite user by username or email | Yes (Member) |
-| `POST` | `/join/:inviteCode` | Join group via shareable link code | Yes |
-| `DELETE` | `/:id/members/:memberId` | Remove member or leave group | Yes (Admin/Owner) |
-
-### Expenses (`/api/expenses`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/` | Add expense with Equal, Exact, or Percentage split | Yes (Member) |
-| `GET` | `/group/:groupId` | Get group expenses with search, category, and date filter | Yes (Member) |
-| `GET` | `/:id` | Get single expense details, receipt, and breakdown | Yes (Member) |
-| `PATCH` | `/:id` | Edit expense description, category, or notes | Yes (Creator/Admin) |
-| `DELETE` | `/:id` | Delete expense and recalculate group balances | Yes (Creator/Admin) |
-
-### Balances & Debt Simplification (`/api/balances`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/groups/:groupId` | Calculate complete group balances in integer paise | Yes (Member) |
-| `GET` | `/groups/:groupId/suggestions`| Min-Cash-Flow optimal simplified debts | Yes (Member) |
-| `GET` | `/me` | User's aggregate net balance across all groups | Yes |
-
-### Settlements (`/api/settlements`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/` | Record payment settlement (Cash, UPI, Bank Transfer) | Yes (Member) |
-| `GET` | `/group/:groupId` | Get group settlement history | Yes (Member) |
-| `PATCH` | `/:id/confirm` | Creditor confirms receipt of payment | Yes (Recipient) |
-| `PATCH` | `/:id/reject` | Reject invalid settlement | Yes (Recipient) |
-
-### Friends & Invitations
-- `GET /api/friends`: List user's accepted friends.
-- `POST /api/friends/request`: Send friend request by username or email.
-- `POST /api/friends/accept/:id`: Accept incoming friend request.
-- `GET /api/invitations`: List pending group invitations.
-- `POST /api/invitations/:id/accept`: Accept group invitation.
-
-### Analytics (`/api/analytics`)
-- `GET /api/analytics`: Monthly spending trends, category distributions, group comparisons.
-- `GET /api/analytics/export/csv`: Stream downloadable CSV expense audit log.
-
----
-
-## 🔒 Security Best Practices Implemented
-
-1. **Password Hashing**: 10-round salted bcrypt hashing; plain-text passwords are never stored or logged.
-2. **Access & Refresh Token Lifecycle**: Short-lived (15-minute) JWT access tokens paired with 7-day cryptographically hashed refresh tokens stored in the database. Tokens are rotated upon every refresh request.
-3. **Collation & Case-Insensitive Unique Constraints**: Username comparisons are strictly lowercase and enforce MongoDB unique index constraints.
-4. **Group Authorization Boundary**: Middleware rigorously verifies that a user belongs to a group before revealing expenses, balances, or activity records.
-5. **No Floating-Point Math**: All currencies are converted to and stored as integer paise (`amountInPaise = Math.round(rupees * 100)`), preventing financial rounding leakage.
-
----
-
-## 🚢 Production Deployment
-
-### Docker Deployment
-EXPENSELY can be containerized effortlessly with standard multi-stage Dockerfiles:
-```dockerfile
-# Build frontend
-FROM node:22-alpine AS build-frontend
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
-
-# Production Node Server
-FROM node:22-alpine
-WORKDIR /app
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install --production
-COPY backend/ ./backend/
-COPY --from=build-frontend /app/frontend/dist ./frontend/dist
-ENV NODE_ENV=production
-ENV PORT=5000
-EXPOSE 5000
-CMD ["node", "backend/src/server.js"]
-```
-
----
-
-## 📜 Evaluation Checklist & Verification
-
-| Requirement | Implementation Status |
-| :--- | :--- |
-| Dual Authentication (Google + Username/Password) | **Completed & Tested** |
-| Unique case-insensitive usernames | **Enforced with MongoDB unique indexes** |
-| Multi-User shared group model | **Completed (Same ObjectId shared across peers)** |
-| Real-time WebSockets (Socket.io) | **Completed (Rooms: `group:<id>` and `user:<id>`)** |
-| Integer paise financial engine | **Completed (Zero floating point errors)** |
-| Min-Cash-Flow debt simplification | **Completed (Greedy optimal matching)** |
-| 3 Splitting Methods (Equal, Exact, Percentage) | **Completed with sum validation** |
-| Dedicated Settle Up module | **Completed with confirmation workflow** |
-| Advanced Analytics & Charts | **Completed (Recharts + CSV & PDF export)** |
-| 17 Pages with modern fintech theme | **Completed (Dark navy, emerald, coral, violet)** |
-| Integration tests passing | **15/15 tests passing** |
-
----
-
-Made with ❤️ by Ashutosh Kumar for **EXPENSELY**.
-*Split Smart. Live Better.*
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
