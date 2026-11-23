@@ -81,19 +81,63 @@ export const RegisterPage: React.FC = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      toast.error('Google Sign-In is not configured. Please add VITE_GOOGLE_CLIENT_ID in your environment variables.');
+      return;
+    }
+
+    if (!window.google?.accounts?.oauth2) {
+      toast.error('Google Sign-In SDK is still loading. Please check your internet connection or try again.');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const googleUser = {
-        name: 'New Google User',
-        email: `user.${Date.now()}@gmail.com`,
-        googleId: `google-signup-${Date.now()}`
-      };
-      const ok = await loginWithGoogle(googleUser);
-      if (ok) {
-        navigate('/dashboard');
-      }
-    } finally {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: 'email profile openid',
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse.error) {
+            setSubmitting(false);
+            if (tokenResponse.error !== 'popup_closed_by_user') {
+              toast.error(tokenResponse.error_description || 'Google sign-up failed');
+            }
+            return;
+          }
+
+          try {
+            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+            });
+            const profile = await res.json();
+
+            if (!profile.email) {
+              throw new Error('Google account email not verified');
+            }
+
+            const ok = await loginWithGoogle({
+              email: profile.email,
+              name: profile.name || profile.email.split('@')[0],
+              googleId: profile.sub,
+              picture: profile.picture
+            });
+
+            if (ok) {
+              navigate('/dashboard');
+            }
+          } catch (err: any) {
+            toast.error(err.message || 'Failed to authenticate with Google');
+          } finally {
+            setSubmitting(false);
+          }
+        }
+      });
+
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    } catch (err: any) {
       setSubmitting(false);
+      toast.error(err.message || 'Could not initialize Google Sign-In');
     }
   };
 

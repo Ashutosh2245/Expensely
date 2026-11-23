@@ -33,37 +33,65 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  // Demo user quick login helper
-  const handleQuickDemoLogin = async (username: string) => {
-    setIdentifier(username);
-    setPassword('password123');
-    try {
-      setSubmitting(true);
-      const success = await login(username, 'password123');
-      if (success) {
-        navigate(from, { replace: true });
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      toast.error('Google Sign-In is not configured. Please add VITE_GOOGLE_CLIENT_ID in your environment variables.');
+      return;
+    }
+
+    if (!window.google?.accounts?.oauth2) {
+      toast.error('Google Sign-In SDK is still loading. Please check your internet connection or try again.');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      // Dual Auth: Google OAuth Sign-in integration
-      const googleUser = {
-        name: 'Ashutosh Kumar (Google)',
-        email: 'ashutosh.google@gmail.com',
-        googleId: 'google-oauth-demo-user-123',
-        picture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
-      };
-      const ok = await loginWithGoogle(googleUser);
-      if (ok) {
-        navigate(from, { replace: true });
-      }
-    } finally {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: 'email profile openid',
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse.error) {
+            setSubmitting(false);
+            if (tokenResponse.error !== 'popup_closed_by_user') {
+              toast.error(tokenResponse.error_description || 'Google sign-in failed');
+            }
+            return;
+          }
+
+          try {
+            // Fetch verified user profile directly from Google
+            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+            });
+            const profile = await res.json();
+
+            if (!profile.email) {
+              throw new Error('Google account email not verified');
+            }
+
+            const ok = await loginWithGoogle({
+              email: profile.email,
+              name: profile.name || profile.email.split('@')[0],
+              googleId: profile.sub,
+              picture: profile.picture
+            });
+
+            if (ok) {
+              navigate(from, { replace: true });
+            }
+          } catch (err: any) {
+            toast.error(err.message || 'Failed to authenticate with Google');
+          } finally {
+            setSubmitting(false);
+          }
+        }
+      });
+
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    } catch (err: any) {
       setSubmitting(false);
+      toast.error(err.message || 'Could not initialize Google Sign-In');
     }
   };
 
@@ -175,43 +203,6 @@ export const LoginPage: React.FC = () => {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Logins Bar */}
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 text-center">
-              Quick 1-Click Demo Accounts (Password: password123)
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('ashutosh')}
-                className="px-2.5 py-1.5 rounded-lg border border-white/5 bg-navy-850 hover:bg-white/5 text-xs text-slate-300 font-medium transition text-left truncate"
-              >
-                👤 Ashutosh (Owner)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('rahul')}
-                className="px-2.5 py-1.5 rounded-lg border border-white/5 bg-navy-850 hover:bg-white/5 text-xs text-slate-300 font-medium transition text-left truncate"
-              >
-                👤 Rahul (Admin)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('aman')}
-                className="px-2.5 py-1.5 rounded-lg border border-white/5 bg-navy-850 hover:bg-white/5 text-xs text-slate-300 font-medium transition text-left truncate"
-              >
-                👤 Aman (Member)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin('priya')}
-                className="px-2.5 py-1.5 rounded-lg border border-white/5 bg-navy-850 hover:bg-white/5 text-xs text-slate-300 font-medium transition text-left truncate"
-              >
-                👤 Priya (Member)
-              </button>
-            </div>
-          </div>
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">
