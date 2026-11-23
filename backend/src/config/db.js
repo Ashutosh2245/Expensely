@@ -29,30 +29,35 @@ export const connectDB = async () => {
       socketTimeoutMS: 45000
     };
 
-    if (isProduction) {
-      if (!uri || uri.includes('127.0.0.1') || uri.includes('localhost')) {
-        console.warn('[Database] Production mode requires a valid remote MongoDB Atlas URI in MONGODB_URI.');
-      }
-      console.log('[Database] Connecting to MongoDB Atlas in production mode...');
+    // If running in production or connecting to a remote MongoDB Atlas cluster, connect directly
+    const isRemoteUri = Boolean(uri && (uri.startsWith('mongodb+srv://') || (!uri.includes('127.0.0.1') && !uri.includes('localhost'))));
+
+    if (isProduction || isRemoteUri) {
+      console.log('[Database] Connecting to MongoDB Atlas...');
       await mongoose.connect(uri, connectionOptions);
+      console.log('[Database] Successfully connected to MongoDB Atlas');
       return mongoose.connection;
     }
 
-    // Development / Test mode: Try provided URI, fallback to MongoMemoryServer
+    // Local development mode: Try provided URI, fallback to MongoMemoryServer if installed
     try {
       await mongoose.connect(uri, connectionOptions);
-      console.log(`[Database] Connected to MongoDB at ${uri}`);
+      console.log(`[Database] Connected to local MongoDB at ${uri}`);
       return mongoose.connection;
     } catch (connErr) {
-      console.warn(`[Database] Local MongoDB unavailable (${connErr.message}). Starting embedded in-memory MongoDB...`);
+      console.warn(`[Database] Local MongoDB unavailable (${connErr.message}). Attempting in-memory database...`);
       
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-      memServer = await MongoMemoryServer.create();
-      uri = memServer.getUri();
-      
-      await mongoose.connect(uri);
-      console.log(`[Database] Connected to in-memory MongoDB at ${uri}`);
-      return mongoose.connection;
+      try {
+        const { MongoMemoryServer } = await import('mongodb-memory-server');
+        memServer = await MongoMemoryServer.create();
+        uri = memServer.getUri();
+        
+        await mongoose.connect(uri);
+        console.log(`[Database] Connected to in-memory MongoDB at ${uri}`);
+        return mongoose.connection;
+      } catch (importErr) {
+        throw new Error(`Failed to connect to local MongoDB (${connErr.message}) and mongodb-memory-server is not available (${importErr.message}).`);
+      }
     }
   } catch (error) {
     console.error('[Database] Critical DB connection error:', error.message);
