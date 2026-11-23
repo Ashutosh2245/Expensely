@@ -416,6 +416,23 @@ export const LandingPage: React.FC = () => {
             <span className="text-slate-500 text-xs">© 2026 EXPENSELY. Split Smart. Live Better.</span>
           </div>
 
+          <div className="text-xs text-slate-400 flex items-center gap-1.5">
+            <span>Developed with</span>
+            <span className="text-coral-400">❤️</span>
+            <span>by</span>
+            <a
+              href="https://www.linkedin.com/in/ashutosh-kumar-92612b236/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 font-medium transition inline-flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 hover:border-emerald-500/40"
+            >
+              <span>Ashutosh Kumar</span>
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0 0-3.28 1.64 1.64 0 0 0 0 3.28m1.4 9.74v-8.37H5.06v8.37h2.8z"/>
+              </svg>
+            </a>
+          </div>
+
           <div className="flex items-center gap-6 text-xs text-slate-400">
             <Link to="/login" className="hover:text-white transition">Sign In</Link>
             <Link to="/register" className="hover:text-white transition">Register</Link>
