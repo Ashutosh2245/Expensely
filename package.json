@@ -1,0 +1,24 @@
+{
+  "name": "expensely-monorepo",
+  "version": "1.0.0",
+  "description": "EXPENSELY – Smart Expense Splitting & Collaborative Financial Management Platform",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "seed": "node backend/src/utils/seed.js",
+    "test": "node --test backend/tests/*.test.js",
+    "dev:backend": "node --watch backend/src/server.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "splitwise-alternative",
+    "expense-splitter",
+    "debt-simplification",
+    "fintech",
+    "socket-io",
+    "react",
+    "nodejs"
+  ],
+  "author": "Ashutosh Kumar",
+  "license": "MIT"
+}
