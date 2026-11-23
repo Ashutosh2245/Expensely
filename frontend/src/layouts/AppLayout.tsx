@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { Navbar } from '../components/Navbar';
+import { LayoutDashboard, Users, Plus, PieChart, History } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -10,14 +11,14 @@ export const AppLayout: React.FC = () => {
     <div className="min-h-screen bg-navy-950 text-slate-100 flex flex-col">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="md:pl-64 flex flex-col flex-1">
+      <div className="md:pl-64 flex flex-col flex-1 pb-16 md:pb-0">
         <Navbar onToggleSidebar={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-3.5 sm:p-6 md:p-8 max-w-7xl w-full mx-auto animate-fade-in">
           <Outlet />
         </main>
 
-        <footer className="py-4 px-6 border-t border-white/5 text-center text-xs text-slate-500">
+        <footer className="py-4 px-6 border-t border-white/5 text-center text-xs text-slate-500 mb-2 md:mb-0">
           Developed with <span className="text-coral-400">❤️</span> by{' '}
           <a
             href="https://www.linkedin.com/in/ashutosh-kumar-92612b236/"
@@ -32,6 +33,69 @@ export const AppLayout: React.FC = () => {
           </a>
         </footer>
       </div>
+
+      {/* Modern Native-like Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-navy-950/95 backdrop-blur-xl border-t border-white/10 px-3 py-1.5 flex items-center justify-around shadow-2xl">
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition ${
+              isActive ? 'text-brand-purple font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`
+          }
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          <span className="text-[10px]">Home</span>
+        </NavLink>
+
+        <NavLink
+          to="/groups"
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition ${
+              isActive ? 'text-brand-purple font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`
+          }
+        >
+          <Users className="w-4 h-4" />
+          <span className="text-[10px]">Groups</span>
+        </NavLink>
+
+        {/* Center Floating Elevated Add Button */}
+        <NavLink
+          to="/add-expense"
+          className="flex flex-col items-center -mt-5"
+          title="Add Expense"
+        >
+          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-brand-purple to-brand-indigo flex items-center justify-center text-white shadow-glow border-2 border-navy-950 active:scale-95 transition-transform">
+            <Plus className="w-6 h-6 stroke-[2.5]" />
+          </div>
+          <span className="text-[9px] text-slate-300 font-semibold mt-0.5">Add</span>
+        </NavLink>
+
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition ${
+              isActive ? 'text-brand-purple font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`
+          }
+        >
+          <PieChart className="w-4 h-4" />
+          <span className="text-[10px]">Analytics</span>
+        </NavLink>
+
+        <NavLink
+          to="/activity"
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition ${
+              isActive ? 'text-brand-purple font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`
+          }
+        >
+          <History className="w-4 h-4" />
+          <span className="text-[10px]">Activity</span>
+        </NavLink>
+      </nav>
     </div>
   );
 };

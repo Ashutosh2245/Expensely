@@ -48,6 +48,15 @@
   transition: all 0.2s ease;
 }
 
+/* Hide scrollbar for Chrome, Safari, Opera and touch devices */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .glass-input:focus {
   border-color: rgba(139, 92, 246, 0.6);
   box-shadow: 0 0 15px -3px rgba(139, 92, 246, 0.25);

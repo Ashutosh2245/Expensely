@@ -115,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 glass-panel border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+              <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-96 glass-panel border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-navy-900/60">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm text-white">Notifications</span>

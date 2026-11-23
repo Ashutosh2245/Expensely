@@ -434,7 +434,7 @@ export const GroupDetailsPage: React.FC = () => {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+      <div className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto no-scrollbar whitespace-nowrap">
         <button
           onClick={() => setActiveTab('expenses')}
           className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${

@@ -179,10 +179,10 @@ export const AnalyticsPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-200 border border-white/10 hover:bg-white/5 transition"
+            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 border border-white/10 hover:bg-white/5 transition"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
             <span>Export CSV</span>
@@ -190,7 +190,7 @@ export const AnalyticsPage: React.FC = () => {
 
           <button
             onClick={handleDownloadPDF}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-brand-purple to-brand-indigo hover:opacity-95 shadow-glow transition"
+            className="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-brand-purple to-brand-indigo hover:opacity-95 shadow-glow transition"
           >
             <FileText className="w-4 h-4" />
             <span>Download PDF</span>
@@ -199,13 +199,13 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="glass-panel p-4 rounded-2xl border border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         <div>
           <label className="block text-[11px] font-semibold text-slate-400 mb-1">Group Filter</label>
           <select
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs text-white bg-navy-900"
+            className="glass-input w-full px-3 py-2 rounded-xl text-xs text-white bg-navy-900"
           >
             <option value="">All Groups</option>
             {groups.map((g) => (
@@ -221,7 +221,7 @@ export const AnalyticsPage: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs text-white bg-navy-900"
+            className="glass-input w-full px-3 py-2 rounded-xl text-xs text-white bg-navy-900"
           >
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -237,7 +237,7 @@ export const AnalyticsPage: React.FC = () => {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs text-white bg-navy-900"
+            className="glass-input w-full px-3 py-2 rounded-xl text-xs text-white bg-navy-900"
           />
         </div>
 
@@ -247,35 +247,35 @@ export const AnalyticsPage: React.FC = () => {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs text-white bg-navy-900"
+            className="glass-input w-full px-3 py-2 rounded-xl text-xs text-white bg-navy-900"
           />
         </div>
       </div>
 
       {/* Summary KPI Strip */}
       {analyticsData && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="glass-panel p-4 rounded-xl border border-white/5">
-            <span className="text-[11px] text-slate-400 font-medium">Total Spend</span>
-            <div className="text-xl font-bold text-white mt-1">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          <div className="glass-panel p-3 sm:p-4 rounded-xl border border-white/5">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Total Spend</span>
+            <div className="text-base sm:text-xl font-bold text-white mt-1 truncate">
               ₹{(analyticsData.summary?.totalExpenseAmount || 0).toFixed(2)}
             </div>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-white/5">
-            <span className="text-[11px] text-slate-400 font-medium">Your Share</span>
-            <div className="text-xl font-bold text-coral-400 mt-1">
+          <div className="glass-panel p-3 sm:p-4 rounded-xl border border-white/5">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Your Share</span>
+            <div className="text-base sm:text-xl font-bold text-coral-400 mt-1 truncate">
               ₹{(analyticsData.summary?.yourTotalShare || 0).toFixed(2)}
             </div>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-white/5">
-            <span className="text-[11px] text-slate-400 font-medium">You Paid</span>
-            <div className="text-xl font-bold text-emerald-400 mt-1">
+          <div className="glass-panel p-3 sm:p-4 rounded-xl border border-white/5">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">You Paid</span>
+            <div className="text-base sm:text-xl font-bold text-emerald-400 mt-1 truncate">
               ₹{(analyticsData.summary?.yourTotalPaid || 0).toFixed(2)}
             </div>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-white/5">
-            <span className="text-[11px] text-slate-400 font-medium">Top Category</span>
-            <div className="text-xl font-bold text-brand-purple mt-1 truncate">
+          <div className="glass-panel p-3 sm:p-4 rounded-xl border border-white/5">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Top Category</span>
+            <div className="text-base sm:text-xl font-bold text-brand-purple mt-1 truncate">
               {analyticsData.summary?.topCategory || 'N/A'}
             </div>
           </div>
@@ -290,13 +290,13 @@ export const AnalyticsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Spending Trend Area Chart */}
-          <div className="glass-panel p-6 rounded-2xl border border-white/5">
+          <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-white/5 min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-white">Monthly Spending Dynamics</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-white">Monthly Spending Dynamics</h3>
               <TrendingUp className="w-4 h-4 text-brand-purple" />
             </div>
 
-            <div className="h-64 w-full">
+            <div className="h-56 sm:h-64 w-full min-w-0 overflow-hidden">
               {analyticsData?.monthlyChartData?.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analyticsData.monthlyChartData}>

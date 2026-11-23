@@ -343,6 +343,7 @@ export const AddExpensePage: React.FC = () => {
                   step="0.01"
                   min="0.01"
                   required
+                  inputMode="decimal"
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
@@ -391,11 +392,11 @@ export const AddExpensePage: React.FC = () => {
             <label className="block text-xs font-semibold text-slate-300 mb-2">
               Split Method
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               {[
-                { id: 'EQUAL', label: 'Split Equally', icon: Users },
-                { id: 'EXACT', label: 'Exact Amounts', icon: Calculator },
-                { id: 'PERCENTAGE', label: 'By Percentage', icon: Percent }
+                { id: 'EQUAL', label: 'Split Equally', mobileLabel: 'Equal', icon: Users },
+                { id: 'EXACT', label: 'Exact Amounts', mobileLabel: 'Exact', icon: Calculator },
+                { id: 'PERCENTAGE', label: 'By Percentage', mobileLabel: 'Percent', icon: Percent }
               ].map((m) => {
                 const Icon = m.icon;
                 const isSelected = splitType === m.id;
@@ -404,14 +405,15 @@ export const AddExpensePage: React.FC = () => {
                     key={m.id}
                     type="button"
                     onClick={() => setSplitType(m.id as any)}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition ${
+                    className={`py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition ${
                       isSelected
                         ? 'border-brand-purple bg-brand-purple/15 text-white shadow-glow'
                         : 'border-white/5 bg-navy-900/60 text-slate-400 hover:text-white'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span>{m.label}</span>
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="hidden sm:inline">{m.label}</span>
+                    <span className="sm:hidden">{m.mobileLabel}</span>
                   </button>
                 );
               })}
